@@ -1,10 +1,10 @@
 import os
 import requests
 import json
-import openai
 from datetime import datetime
+import openai
 
-# Secrets from GitHub
+# GitHub Actions secrets
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL = os.getenv("CHANNEL")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
@@ -20,19 +20,28 @@ def generate_quiz():
     Format: question, 4 options (A-D), correct answer index (0-3)
     Return in JSON array format: [{"question": "...", "options": ["...","...","...","..."], "answer": 1}, ...]
     """
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-    )
     try:
-        quiz_data = json.loads(response.choices[0].message.content)
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+        )
+        content = response.choices[0].message.content
+        # Parse JSON safely
+        quiz_data = json.loads(content)
         return quiz_data
     except Exception as e:
-        print("Error parsing OpenAI response:", e)
-        return []
+        print("Error generating quiz:", e)
+        # fallback predefined questions
+        return [
+            {"question": "भारत की राजधानी क्या है?", "options": ["मुंबई","दिल्ली","कोलकाता","चेन्नई"], "answer": 1},
+            {"question": "भारत का सबसे लंबा नदी कौन सा है?", "options": ["गंगा","यमुना","गोदावरी","सिंधु"], "answer": 0},
+            {"question": "भारत का राष्ट्रीय पक्षी कौन सा है?", "options": ["कौआ","मोर","कबूतर","गिद्ध"], "answer": 1},
+            {"question": "भारत का संविधान कब लागू हुआ?", "options": ["1947","1950","1952","1949"], "answer": 1},
+            {"question": "भारत का सबसे ऊँचा पर्वत कौन सा है?", "options": ["कंचनजंगा","नंगा पर्वत","एवरेस्ट","मैककिंले"], "answer": 2},
+        ]
 
-# Function to send quiz poll to Telegram
+# Function to send Telegram quiz poll
 def send_quiz_poll(question, options, correct_option_id):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPoll"
     payload = {
@@ -49,6 +58,7 @@ def send_quiz_poll(question, options, correct_option_id):
     else:
         print(f"❌ Failed to send quiz. Status: {response.status_code}, Response: {response.text}")
 
+# Main
 if __name__ == "__main__":
     quiz_list = generate_quiz()
     for q in quiz_list:
