@@ -1,5 +1,6 @@
 name: Daily SSC Quiz Bot
 
+# Trigger every day at 08:00 IST
 on:
   schedule:
     - cron: "30 2 * * *"  # 08:00 IST = 02:30 UTC
@@ -10,18 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repo
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
+      # 3️⃣ Install Python dependencies
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install requests openai
 
+      # 4️⃣ Run the quiz bot
       - name: Run quiz bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
