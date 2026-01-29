@@ -20,7 +20,7 @@ def send_quiz_poll():
         "chat_id": CHANNEL,
         "question": quiz_question,
         "options": json.dumps(quiz_options),  # ✅ JSON string
-        "is_anonymous": False
+        "is_anonymous": True
     }
     response = requests.post(url, data=payload)
     if response.status_code == 200:
