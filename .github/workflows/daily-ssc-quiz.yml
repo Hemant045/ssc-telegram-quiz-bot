@@ -2,7 +2,7 @@ name: Daily SSC Quiz Bot
 
 on:
   schedule:
-    - cron: "30 3 * * *"  # 9:00 AM IST
+    - cron: "30 2 * * *"  # 08:00 IST = 02:30 UTC
   workflow_dispatch:
 
 jobs:
@@ -20,10 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests
+          pip install requests openai
 
       - name: Run quiz bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHANNEL: ${{ secrets.CHANNEL }}
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
         run: python bot.py
