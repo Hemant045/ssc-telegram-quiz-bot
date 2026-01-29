@@ -10,18 +10,17 @@ CHANNEL = os.getenv("CHANNEL")
 if not BOT_TOKEN or not CHANNEL:
     raise Exception("BOT_TOKEN या CHANNEL सेट नहीं है!")
 
-# Quiz question and options
+# Example quiz question and options
 quiz_question = "भारत की राजधानी क्या है?"
 quiz_options = ["मुंबई", "दिल्ली", "कोलकाता", "चेन्नई"]
 
-# Send poll
 def send_quiz_poll():
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPoll"
     
     payload = {
         "chat_id": CHANNEL,
         "question": quiz_question,
-        "options": json.dumps(quiz_options),  # ✅ JSON string
+        "options": json.dumps(quiz_options),  # ✅ Proper JSON string
         "is_anonymous": False
     }
     
