@@ -1,0 +1,31 @@
+name: Daily SSC Quiz Bot
+
+on:
+  schedule:
+    - cron: "30 3 * * *"   # 9:00 AM IST
+  workflow_dispatch:
+
+jobs:
+  send-quiz:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install openai requests
+
+      - name: Run quiz bot
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHANNEL: ${{ secrets.CHANNEL }}
+        run: |
+          python bot.py
