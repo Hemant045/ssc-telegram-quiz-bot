@@ -1,65 +1,36 @@
-import os
-import requests
-import json
-from datetime import datetime
-import openai
+from datetime import date
+from openai import OpenAI
 
-# GitHub Actions secrets
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL = os.getenv("CHANNEL")
-OPENAI_KEY = os.getenv("OPENAI_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
-if not BOT_TOKEN or not CHANNEL or not OPENAI_KEY:
-    raise Exception("BOT_TOKEN, CHANNEL या OPENAI_KEY missing! Add them in repo secrets.")
-
-openai.api_key = OPENAI_KEY
-
-# Function to generate 5 current affairs SSC questions
 def generate_quiz():
-    prompt = """Generate 5 current affairs multiple choice questions for SSC exam.
-    Format: question, 4 options (A-D), correct answer index (0-3)
-    Return in JSON array format: [{"question": "...", "options": ["...","...","...","..."], "answer": 1}, ...]
+    today = date.today().strftime("%d %B %Y")
+
+    prompt = f"""
+    Create 5 SSC-level multiple choice CURRENT AFFAIRS questions
+    strictly based on events around {today}.
+
+    Rules:
+    - Each question must be different
+    - Topics: Government schemes, sports, awards, economy, defence
+    - Language: Hindi
+    - 4 options per question
+    - Clearly mention correct answer index (0-based)
+
+    Output format (JSON only):
+    [
+      {{
+        "question": "...",
+        "options": ["A","B","C","D"],
+        "correct": 1
+      }}
+    ]
     """
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-        )
-        content = response.choices[0].message.content
-        # Parse JSON safely
-        quiz_data = json.loads(content)
-        return quiz_data
-    except Exception as e:
-        print("Error generating quiz:", e)
-        # fallback predefined questions
-        return [
-            {"question": "भारत की राजधानी क्या है?", "options": ["मुंबई","दिल्ली","कोलकाता","चेन्नई"], "answer": 1},
-            {"question": "भारत का सबसे लंबा नदी कौन सा है?", "options": ["गंगा","यमुना","गोदावरी","सिंधु"], "answer": 0},
-            {"question": "भारत का राष्ट्रीय पक्षी कौन सा है?", "options": ["कौआ","मोर","कबूतर","गिद्ध"], "answer": 1},
-            {"question": "भारत का संविधान कब लागू हुआ?", "options": ["1947","1950","1952","1949"], "answer": 1},
-            {"question": "भारत का सबसे ऊँचा पर्वत कौन सा है?", "options": ["कंचनजंगा","नंगा पर्वत","एवरेस्ट","मैककिंले"], "answer": 2},
-        ]
 
-# Function to send Telegram quiz poll
-def send_quiz_poll(question, options, correct_option_id):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPoll"
-    payload = {
-        "chat_id": CHANNEL,
-        "question": question,
-        "options": json.dumps(options),
-        "type": "quiz",
-        "correct_option_id": correct_option_id,
-        "is_anonymous": True  # required for channel
-    }
-    response = requests.post(url, data=payload)
-    if response.status_code == 200:
-        print(f"✅ Quiz sent successfully at {datetime.now()}")
-    else:
-        print(f"❌ Failed to send quiz. Status: {response.status_code}, Response: {response.text}")
+    response = client.chat.completions.create(
+        model="gpt-4.1-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.9  # 🔥 randomness
+    )
 
-# Main
-if __name__ == "__main__":
-    quiz_list = generate_quiz()
-    for q in quiz_list:
-        send_quiz_poll(q['question'], q['options'], q['answer'])
+    return json.loads(response.choices[0].message.content)
