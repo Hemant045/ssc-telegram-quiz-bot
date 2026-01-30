@@ -1,4 +1,6 @@
 import os
+import json
+import requests
 from datetime import date
 from openai import OpenAI
 
